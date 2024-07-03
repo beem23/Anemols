@@ -12,20 +12,7 @@ function App() {
 
   return (
     <div>
-      {(typeof data.users === 'undefined') ? (
-        <p>Loading...</p>
-      ) : (
-        <div>
-          <h1>Users</h1>
-          <ul>
-            {data.users.map((user) => {
-              return (
-                <li key={user}>{user}</li>
-              )
-            })}
-          </ul>
-        </div>
-      )}
+      
     </div>
   )
 }
