@@ -1,46 +1,53 @@
 const express = require('express');
 const multer = require('multer');
-const fs = require('fs');
-const tf = require('@tensorflow/tfjs-node');
+const cors = require('cors');
+require('dotenv').config();
+const path = require('path');
+const axios = require('axios');
+const callVertexAiEndpoint = require('./callVertexAiEndpoint');
+
 
 
 const app = express();
 const port = 3001;
-const upload = multer({ dest: 'uploads/' });
 
-let model;
+app.use(cors());
 
-// Load the model
-async function loadModel() {
-    try {
-      const modelPath = 'file://C:/Users/bello/Documents/Anemols/server/model/model-6233202886117949440/tf-js/modelfiles/model.json';
-      console.log("Loading model from:", modelPath);
-      model = await tf.loadLayersModel(modelPath); // Ensure this path is correct
-      console.log("Model loaded successfully");
-    } catch (error) {
-      console.error("Error loading model:", error);
-    }
-  }
-
-loadModel();
-
-app.post('/upload', upload.single('image'), async (req, res) => {
-  try {
-    const imagePath = req.file.path;
-    const imageBuffer = fs.readFileSync(imagePath);
-    const imageTensor = tf.node.decodeImage(imageBuffer);
-
-    const predictions = model.predict(imageTensor.expandDims(0));
-    const predictedIndex = predictions.argMax(-1).dataSync()[0];
-
-    res.json({ prediction: predictedIndex });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('Error processing image');
-  } finally {
-    fs.unlinkSync(imagePath); // Clean up the uploaded file
-  }
+// Set up multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
 });
 
+const upload = multer({ storage });
 
-app.listen(port, () => { console.log(`Server started on port ${port}`) })
+// Endpoint to handle file uploads
+app.post('/upload', upload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).send({ message: 'No file uploaded.' });
+  }
+
+    // Example: Simulate prediction logic
+    // Replace this with your actual prediction logic or service call
+    // const prediction = simulatePrediction(req.file);
+    // const prediction = 'WTF IS THAT??!';
+    const prediction = callVertexAiEndpoint(req.file);
+    
+
+  res.send({ message: 'File uploaded successfully.', prediction });
+});
+
+// Simulate a prediction function (for example purposes)
+const simulatePrediction = (file) => {
+  // Logic to process the file and return a prediction
+  // Replace with actual logic or service call
+  return 'Cat'; // Example prediction
+};
+
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
+});
