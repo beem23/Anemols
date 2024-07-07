@@ -2,6 +2,7 @@ import numpy as np
 import tensorflow as tf
 from PIL import Image
 import os
+from flask import Flask, request, jsonify
 
 # List of animal species in the correct order based on the provided images
 species_names = [
@@ -50,24 +51,47 @@ def run_inference(model_path, image_path):
     output_data = interpreter.get_tensor(output_details[0]['index'])
     print("Raw Model output:", output_data)
 
-    # Print detailed output
+    # Prepare detailed output
+    detailed_output = []
     for index, score in enumerate(output_data[0]):
-        print(f"{species_names[index]} Class index: {index}, Confidence score: {score}")
-
+        detailed_output.append({
+            "species": species_names[index],
+            "class_index": index,
+            "confidence_score": float(score)
+        })
     
-    #print some spaces
-    print("\n")
-    print("\n")
-    print("\n")  
-
-    #print out the highest confidence class
+    # Find the highest confidence class
     max_score_index = np.argmax(output_data)
-    print(f"Predicted species: {species_names[max_score_index]}, Confidence score: {output_data[0][max_score_index]}")
+    result = {
+        "predicted_species": species_names[max_score_index],
+        "confidence_score": float(output_data[0][max_score_index]),
+        "detailed_output": detailed_output
+    }
+    
+    return result
 
-# Get the absolute path to the model and image
-script_dir = os.path.dirname(os.path.abspath(__file__))
-model_path = os.path.join(script_dir, 'model', 'model.tflite')  # Path to your TF Lite model within the 'model' folder
-image_path = os.path.join(script_dir, 'image.png')  # Path to your image
+# Set up the Flask server
+app = Flask(__name__)
 
-# Execute the inference
-run_inference(model_path, image_path)
+@app.route('/infer', methods=['POST'])
+def infer():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+    
+    if file:
+        image_path = os.path.join('uploads', file.filename)
+        file.save(image_path)
+        
+        model_path = "./model/model.tflite"
+        result = run_inference(model_path, image_path)
+        os.remove(image_path)  # Clean up the uploaded file
+        
+        return jsonify(result)
+
+if __name__ == '__main__':
+    os.makedirs('uploads', exist_ok=True)  # Ensure the uploads directory exists
+    app.run(host='0.0.0.0', port=5003)

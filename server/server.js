@@ -1,12 +1,10 @@
 const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
-require('dotenv').config();
-const path = require('path');
 const axios = require('axios');
-const callVertexAiEndpoint = require('./callVertexAiEndpoint');
-
-
+const path = require('path');
+const fs = require('fs');  // Add this line to import the fs module
+const FormData = require('form-data');  // Add this line to import the FormData module
 
 const app = express();
 const port = 3001;
@@ -26,27 +24,38 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Endpoint to handle file uploads
-app.post('/upload', upload.single('file'), (req, res) => {
+app.post('/upload', upload.single('file'), async (req, res) => {
   if (!req.file) {
     return res.status(400).send({ message: 'No file uploaded.' });
   }
 
-    // Example: Simulate prediction logic
-    // Replace this with your actual prediction logic or service call
-    // const prediction = simulatePrediction(req.file);
-    // const prediction = 'WTF IS THAT??!';
-    const prediction = callVertexAiEndpoint(req.file);
-    
+  try {
+    const formData = new FormData();
+    formData.append('file', fs.createReadStream(req.file.path));
 
-  res.send({ message: 'File uploaded successfully.', prediction });
+    const response = await axios.post('http://localhost:5003/infer', formData, {
+      headers: {
+        ...formData.getHeaders(),
+      },
+    });
+
+    res.send({ message: 'File uploaded successfully.', prediction: response.data });
+  } catch (error) {
+    console.error('Error calling Python server:', error);
+    res.status(500).json({
+      message: 'Error calling Python server',
+      error: error.message,
+    });
+  }
+  // } finally {
+  //   // Clean up the uploaded file from the Node.js server
+  //   fs.unlink(req.file.path, (err) => {
+  //     if (err) {
+  //       console.error('Failed to delete uploaded file:', err);
+  //     }
+  //   });
+  // }
 });
-
-// Simulate a prediction function (for example purposes)
-const simulatePrediction = (file) => {
-  // Logic to process the file and return a prediction
-  // Replace with actual logic or service call
-  return 'Cat'; // Example prediction
-};
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
