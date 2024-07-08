@@ -77,7 +77,7 @@ const FileUpload = () => {
         alignItems: 'center',
         justifyContent: 'center',
         height: '100vh',
-        background:'linear-gradient(135deg, #89fffd, #ef32d9)', // Change background color based on loading state
+        background: 'linear-gradient(135deg, #89fffd, #ef32d9)', // Change background color based on loading state
         fontFamily: '"Comic Neue", cursive, sans-serif',
         color: '#fff',
         textAlign: 'center',
