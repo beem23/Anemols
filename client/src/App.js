@@ -4,7 +4,7 @@ import FileUpload from './FileUpload'
 function App() {
 
   return (
-    <div>
+    <div style={{minWidth: 'fit-content', minHeight: 'fit-content'}}>
       <FileUpload />
     </div>
   )
