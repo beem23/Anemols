@@ -34,7 +34,7 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     const formData = new FormData();
     formData.append('file', fs.createReadStream(req.file.path));
 
-    const response = await axios.post('http://localhost:5003/infer', formData, {
+    const response = await axios.post('http://10.0.10.230:5003/infer', formData, {
       headers: {
         ...formData.getHeaders(),
       },
@@ -59,5 +59,5 @@ app.post('/upload', upload.single('file'), async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+  console.log(`Server running on http://10.0.10.230:${port}`);
 });
