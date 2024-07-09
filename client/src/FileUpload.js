@@ -35,7 +35,7 @@ const FileUpload = () => {
         setLoading(true); // Start loading
 
         try {
-            const response = await axios.post('https://10.0.10.230:3001/upload', formData, {
+            const response = await axios.post('https://anemol-backend.marlonbellot.com/upload', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
